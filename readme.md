@@ -1,4 +1,4 @@
-# 🎥 VidCast                     ( Live at :- )                                          
+# 🎥 VidCast                     ( Live only at :- vidcast.vercel.app )                                          
 VidCast is a dynamic video streaming platform . Users can register, log in, search videos, manage personal playlists, view history, and subscribe to their favorite creators.
 
 ---
