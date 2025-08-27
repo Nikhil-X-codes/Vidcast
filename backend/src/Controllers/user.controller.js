@@ -32,8 +32,10 @@ const registeruser = asynchandler(async (req, res) => {
         throw new ApiError(400, "Cover image is required");
     }
 
-    const avatarUrl = await uploadoncloudinary(avatarFile.path);
-    const coverImageUrl = await uploadoncloudinary(coverImageFile.path);
+    const [avatarUrl, coverImageUrl] = await Promise.all([
+        uploadoncloudinary(avatarFile.path),
+        uploadoncloudinary(coverImageFile.path)
+    ]);
 
     if (!avatarUrl) {
         throw new ApiError(500, "Failed to upload avatar to cloud storage");
@@ -67,7 +69,7 @@ const loginuser = asynchandler(async (req, res) => {
     const existinguser = await User.findOne({ email });
 
     if (!existinguser) {
-        return registeruser(req, res); 
+        throw new ApiError(404, "User not found");
     }
 
     const isPasswordValid = await existinguser.isPasswordmatch(password);
@@ -78,7 +80,7 @@ const loginuser = asynchandler(async (req, res) => {
 
     const {accessToken,refreshToken } = await generateAccessAndRefreshTokens(existinguser._id);
 
-    const loggedInUser = await User.findById(existinguser._id).select("-refreshToken");
+    const { password: _p, refreshToken: _r, ...safeUser } = existinguser.toObject();
 
     const options = {
         httpOnly: true,
@@ -95,7 +97,7 @@ const loginuser = asynchandler(async (req, res) => {
                 200,
                  "User logged in successfully",
                 {
-                    user: loggedInUser,
+                    user: safeUser,
                     accessToken,
                     refreshToken
                 },

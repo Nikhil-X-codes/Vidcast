@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/Authcontext';
 import SignInPage from './pages/Signin';
 import LoginPage from './pages/Login';
@@ -15,6 +16,13 @@ import SearchComponent from './pages/Search';
 import SearchVideoPlayer from './pages/searchvideo';
 
 const App = () => {
+  useEffect(() => {
+    const baseUrl = import.meta.env.VITE_BASE_URL;
+    if (!baseUrl) return;
+    // Warm up backend to avoid cold starts (Render free tier)
+    fetch(baseUrl.replace(/\/$/, ''), { method: 'GET', credentials: 'omit' }).catch(() => {});
+  }, []);
+
   return (
     <ThemeProvider>
     <AuthProvider>
