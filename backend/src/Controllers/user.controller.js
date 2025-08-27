@@ -10,8 +10,7 @@ import mongoose from "mongoose";
 
 const registeruser = asynchandler(async (req, res) => {
     const { username, email, password } = req.body;
-    console.log('success')
-    console.log({ username, email, password });
+    // avoid logging PII in production
     if (!username || !email || !password) {
         return res.status(400).json({ message: "All fields are required" });
     }

@@ -1,32 +1,39 @@
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { AuthProvider } from './context/Authcontext';
-import SignInPage from './pages/Signin';
-import LoginPage from './pages/Login';
-import Home from './pages/Home';
-import History from './pages/History';
-import Sidebar from './components/Sidebar';
-import VideoManager from './pages/VideoManager';
-import PlaylistManager from './components/PlaylistManager';
-import Like from './components/Like';
 import { ThemeProvider } from './context/Toggle';
-import SubscriptionStats from './components/SubscriptionStats';
-import SearchComponent from './pages/Search';
-import SearchVideoPlayer from './pages/searchvideo';
+
+const SignInPage = lazy(() => import('./pages/Signin'));
+const LoginPage = lazy(() => import('./pages/Login'));
+const Home = lazy(() => import('./pages/Home'));
+const History = lazy(() => import('./pages/History'));
+const Sidebar = lazy(() => import('./components/Sidebar'));
+const VideoManager = lazy(() => import('./pages/VideoManager'));
+const PlaylistManager = lazy(() => import('./components/PlaylistManager'));
+const Like = lazy(() => import('./components/Like'));
+const SubscriptionStats = lazy(() => import('./components/SubscriptionStats'));
+const SearchComponent = lazy(() => import('./pages/Search'));
+const SearchVideoPlayer = lazy(() => import('./pages/searchvideo'));
 
 const App = () => {
   useEffect(() => {
     const baseUrl = import.meta.env.VITE_BASE_URL;
     if (!baseUrl) return;
     // Warm up backend to avoid cold starts (Render free tier)
-    fetch(baseUrl.replace(/\/$/, ''), { method: 'GET', credentials: 'omit' }).catch(() => {});
+    const warmUrl = baseUrl.replace(/\/$/, '');
+    fetch(warmUrl, { method: 'GET', credentials: 'omit', cache: 'no-store' }).catch(() => {});
+    const id = setInterval(() => {
+      fetch(warmUrl, { method: 'GET', credentials: 'omit', cache: 'no-store' }).catch(() => {});
+    }, 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   return (
     <ThemeProvider>
     <AuthProvider>
       <Router>
+        <Suspense fallback={<div style={{ padding: 24 }}>Loading...</div>}>
         <Routes>
       
           <Route path="/" element={<Navigate to="/signup" />} />
@@ -136,6 +143,7 @@ const App = () => {
   } />
 
         </Routes>
+        </Suspense>
       </Router>
       
     </AuthProvider>
