@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';          
+import cookieParser from 'cookie-parser';           //middleware to parse cookies
 import compression from 'compression';
 
 
@@ -21,7 +21,7 @@ app.use(cors({
 }))
 
 // Fast exit for preflight requests
-app.options('*', cors());
+app.options('/(.*)', cors())
 
 app.use(express.json({
     limit: '1mb'
