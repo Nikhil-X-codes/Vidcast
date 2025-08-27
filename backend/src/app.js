@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';           //middleware to parse cookies
+import cookieParser from 'cookie-parser';          
 import compression from 'compression';
 
 
