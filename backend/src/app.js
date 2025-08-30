@@ -20,7 +20,6 @@ app.use(express.urlencoded({
     limit: '1mb'
 }));
 
-app.use(compression());
 
 app.use(express.static('public'));
 app.use(cookieParser());
