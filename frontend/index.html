@@ -4,18 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="%VITE_BASE_URL%" crossorigin>
     <title>Vidcast</title>
-    <script>
-      (function(){
-        try{
-          var base = import.meta && import.meta.env && import.meta.env.VITE_BASE_URL;
-          if(!base){ return; }
-          var url = base.replace(/\/$/, '');
-          fetch(url, { method: 'GET', cache: 'no-store' }).catch(function(){});
-        }catch(e){}
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
