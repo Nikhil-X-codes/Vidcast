@@ -1,27 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';           //middleware to parse cookies
-import compression from 'compression';
+import cookieParser from 'cookie-parser';           
 
 
 const app = express();
-app.set('trust proxy', 1);
 
 app.use(cors({
-    origin: (origin, cb) => {
-        const list = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
-        if (!origin) return cb(null, true);
-        if (list.length === 0 || list.includes(origin)) return cb(null, true);
-        return cb(new Error('Not allowed by CORS'));
-    },
+     origin: process.env.CORS_ORIGIN,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 86400
 }))
-
-// Fast exit for preflight requests
-app.options('/(.*)', cors())
 
 app.use(express.json({
     limit: '1mb'
@@ -58,4 +46,3 @@ app.get('/', (req, res) => {
 export default app;
 
 
-// middleware-> it act as checkpost between request and response.It has access to the req, res, and next objects.
