@@ -18,7 +18,8 @@ const userSchema = new Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    index: true
   },
   avatar: {
     type: String,
@@ -33,7 +34,8 @@ const userSchema = new Schema({
     required: [true, 'Password is required']
   },
   refreshToken: {
-    type: String
+    type: String,
+    index: { sparse: true }
   },
   resetPasswordToken: {
     type: String

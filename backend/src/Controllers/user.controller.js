@@ -65,7 +65,7 @@ const loginuser = asynchandler(async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
     }
-    const existinguser = await User.findOne({ email });
+    const existinguser = await User.findOne({ email }).select('+password');
 
     if (!existinguser) {
         throw new ApiError(404, "User not found");
@@ -163,7 +163,7 @@ const refreshAccessToken = asynchandler(async (req, res, next) => {
       throw new ApiError(401, "Invalid or expired refresh token");
     }
 
-    const user = await User.findById(decodedToken?.id);
+    const user = await User.findById(decodedToken?.id).select('refreshToken username');
     if (!user) {
       throw new ApiError(404, "User not found");
     }
