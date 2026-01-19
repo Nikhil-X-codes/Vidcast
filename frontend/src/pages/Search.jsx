@@ -81,13 +81,14 @@ const SearchComponent = () => {
       setError(null);
       const response = await fetchsearchVideos(searchQuery);
       
-      if (response.data.status === "Videos fetched successfully" && response.data.message?.videos) {
-        const transformedVideos = response.data.message.videos.map(video => ({
-          _id: video['.id'] || video._id,
+      // Backend sends: { status, message, data: { videos, pagination }, success }
+      if (response.data.success && response.data.data?.videos) {
+        const transformedVideos = response.data.data.videos.map(video => ({
+          _id: video._id,
           video: video.video,
           thumbnail: video.thumbnail,
           owner: video.owner ? {
-            _id: video.owner['.id'] || video.owner._id,
+            _id: video.owner._id,
             username: video.owner.username,
             avatar: video.owner.avatar
           } : {

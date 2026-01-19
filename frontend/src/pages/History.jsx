@@ -30,7 +30,8 @@ const History = () => {
           throw new Error('Received HTML response - likely authentication issue');
         }
 
-        setWatchedVideos(res.data?.videos || res.data?.data || []);
+        // Backend sends: { status, message, data: [...videos array...], success }
+        setWatchedVideos(res.data?.data || []);
       } catch (err) {
         console.error('Failed to load watch history', err);
         setError(err.message || 'Failed to load watch history');

@@ -151,7 +151,7 @@ const getVideosOnSearch = asynchandler(async (req, res) => {
     throw new ApiError(404, "No videos found matching your search");
   }
 
-  res.status(200).json(new ApiResponse("Videos fetched successfully", {
+  res.status(200).json(new ApiResponse(200, "Videos fetched successfully", {
     videos,
     pagination: {
       totalVideos,
@@ -172,7 +172,7 @@ const getSingleVideo = asynchandler(async (req, res) => {
     throw new ApiError(404, "Video not found");
   }
 
-  res.status(200).json(new ApiResponse("Video fetched successfully", video));
+  res.status(200).json(new ApiResponse(200, "Video fetched successfully", video));
 });
 
 

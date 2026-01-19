@@ -18,8 +18,9 @@ const SearchVideoPlayer = () => {
         setLoading(true);
         const response = await fetchVideoById(videoId);
 
-        if (response.data?.status === 'Video fetched successfully') {
-          setVideo(response.data.message);
+        // Backend sends: { status, message, data: {...video object...}, success }
+        if (response.data?.success) {
+          setVideo(response.data.data);
         } else {
           console.error('Failed to fetch video:', response.data?.message);
         }

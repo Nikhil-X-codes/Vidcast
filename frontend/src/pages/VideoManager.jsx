@@ -27,7 +27,8 @@ const VideoManager = () => {
   const loadVideos = async (options = {}) => {
     try {
       const res = await fetchVideos();
-      setVideos(res.data.message.videos || []);
+      // Backend sends: { status, message, data: { videos, pagination }, success }
+      setVideos(res.data.data?.videos || []);
     } catch (err) {
       if (err.response?.status === 404) {
         setVideos([]); 
