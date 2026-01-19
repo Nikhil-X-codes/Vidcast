@@ -6,7 +6,12 @@ import mongoose from "mongoose";
 
 const createPlaylist = asynchandler(async (req, res) => {
     const { name, description } = req.body;
-    const userId = req.user.id;
+    
+    const userId = req.user?._id; 
+
+    if (!userId) {
+        throw new ApiError(401, "User not authenticated");
+    }
 
     if (!name || !description) {
         throw new ApiError(400, "Name and description are required");
@@ -15,10 +20,10 @@ const createPlaylist = asynchandler(async (req, res) => {
     const playlist = await Playlists.create({
         name,
         description,
-        owner: userId,
+        owner: userId, 
     });
 
-    res.status(201).json(new ApiResponse(200,"Playlist created successfully",playlist));
+    res.status(201).json(new ApiResponse(201, "Playlist created successfully", playlist));
 });
 
 const deletePlaylist = asynchandler(async (req, res) => {
@@ -134,14 +139,10 @@ const getAllPlaylists = asynchandler(async (req, res) => {
     }
 
     const playlists = await Playlists.find({ owner: userId })
-    .populate('videos', 'title description thumbnail video')
-
-    if (!playlists.length) {
-        throw new ApiError(404, "No playlists found for this user");
-    }
+        .populate('videos', 'title description thumbnail video');
 
     res.status(200).json(
-        new ApiResponse(200, "Playlists retrieved successfully", playlists)
+        new ApiResponse(200, "Playlists retrieved successfully", playlists || [])
     );
 });
 

@@ -76,7 +76,7 @@ const getAllVideos = asynchandler(async (req, res) => {
     const loggedInUserId = req.user?._id;
 
     if (!loggedInUserId) {
-        return res.status(401).json({ message: "Unauthorized: Login required to view your videos" });
+        throw new ApiError(401, "Unauthorized: Login required to view your videos");
     }
 
     const filter = {
@@ -91,19 +91,17 @@ const getAllVideos = asynchandler(async (req, res) => {
 
     const totalVideos = await Video.countDocuments(filter);
 
-    if (totalVideos === 0) {
-        throw new ApiError(404, "No videos found");
-    }
-
-    res.status(200).json(new ApiResponse("Videos fetched successfully", {
-        videos,
-        pagination: {
-            totalVideos,
-            limit: parseInt(limit),
-            totalPages: Math.ceil(totalVideos / limit),
-            currentPage: parseInt(page),
-        },
-    }));
+    return res.status(200).json(
+        new ApiResponse(200, "Videos fetched successfully", {
+            videos: videos || [], 
+            pagination: {
+                totalVideos,
+                limit: parseInt(limit),
+                totalPages: Math.ceil(totalVideos / limit),
+                currentPage: parseInt(page),
+            },
+        })
+    );
 });
 
 const getVideosOnSearch = asynchandler(async (req, res) => {
