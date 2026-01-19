@@ -1,5 +1,5 @@
  import {createPlaylist, deletePlaylist, updatePlaylist, addVideoToPlaylist, removeVideoFromPlaylist,getplaylist,getAllPlaylists } from '../Controllers/Playlist.controller.js';
-import  Router  from 'express';
+import { Router } from 'express';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const playlistRouter = Router();
