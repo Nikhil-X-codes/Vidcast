@@ -1,8 +1,11 @@
 import multer from "multer";
+import os from "os"; 
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './public/temp');
+        // CHECK: If on Vercel/Production, use /tmp. If Local, use ./public/temp
+        const tempDir = os.tmpdir(); // This works on Vercel ('/tmp') and Windows
+        cb(null, tempDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -12,9 +15,7 @@ const storage = multer.diskStorage({
 
 export const upload = multer({
     storage,
-})
-
-
+});
 
 
 

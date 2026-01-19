@@ -2,20 +2,26 @@ import React, { useState, useEffect } from 'react';
 import VideoCard from '../components/VideoCard';
 import {
   fetchVideos,
-  uploadVideo,
   deleteVideo,
   updateVideo,
   getview,
+  getUploadSignature, // NEW: Import this
+  saveVideoData       // NEW: Import this
 } from '../services/videoService';
 import { FaUpload, FaVideo, FaImage, FaSpinner } from 'react-icons/fa';
 import { useTheme } from '../context/Toggle';
+import axios from 'axios'; // NEW: Required for direct Cloudinary upload
 
 const VideoManager = () => {
   const [videos, setVideos] = useState([]);
   const [form, setForm] = useState({ title: '', description: '' });
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
+  
+  // NEW: Loading state and Progress bar state
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
   const { theme } = useTheme();
 
   const loadVideos = async (options = {}) => {
@@ -35,28 +41,74 @@ const VideoManager = () => {
     loadVideos();
   }, []);
 
+  // --- NEW HELPER: Uploads a file directly to Cloudinary ---
+  const uploadToCloudinary = async (file, folderName) => {
+    // 1. Get the signature from YOUR backend
+    const { data: signData } = await getUploadSignature(folderName);
+    const { signature, timestamp, cloudName, apiKey } = signData.data;
+
+    // 2. Prepare Form Data for Cloudinary
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("api_key", apiKey);
+    formData.append("timestamp", timestamp);
+    formData.append("signature", signature);
+    formData.append("folder", folderName);
+
+    // 3. Construct the Cloudinary URL
+    const resourceType = file.type.startsWith('video') ? 'video' : 'image';
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+
+    // 4. Upload using Axios to track progress
+    const res = await axios.post(cloudinaryUrl, formData, {
+      onUploadProgress: (progressEvent) => {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        setUploadProgress(percent);
+      }
+    });
+
+    return res.data.secure_url;
+  };
+
+  // --- REPLACED: New Handle Upload Logic ---
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!videoFile || !thumbnailFile) {
       return alert('Please select both video and thumbnail');
     }
 
-    const data = new FormData();
-    data.append('title', form.title);
-    data.append('description', form.description);
-    data.append('video', videoFile);
-    data.append('thumbnail', thumbnailFile);
-
     setLoading(true);
+    setUploadProgress(0); // Reset progress
+
     try {
-      await uploadVideo(data);
+      // Step A: Upload Video to Cloudinary
+      console.log("Uploading Video...");
+      const videoUrl = await uploadToCloudinary(videoFile, 'vidcast_videos');
+      
+      // Step B: Upload Thumbnail to Cloudinary
+      console.log("Uploading Thumbnail...");
+      const thumbnailUrl = await uploadToCloudinary(thumbnailFile, 'vidcast_thumbnails');
+
+      // Step C: Save Data to Backend
+      console.log("Saving to DB...");
+      await saveVideoData({
+        title: form.title,
+        description: form.description,
+        videoUrl: videoUrl,
+        thumbnailUrl: thumbnailUrl
+      });
+
+      // Reset Form
       setForm({ title: '', description: '' });
       setVideoFile(null);
       setThumbnailFile(null);
+      setUploadProgress(0);
+      alert('Video Uploaded Successfully!');
       await loadVideos();
+
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Upload failed');
+      alert('Upload failed! Check console.');
     } finally {
       setLoading(false);
     }
@@ -92,37 +144,15 @@ const VideoManager = () => {
     }
   };
 
-  const bgColor = theme === 'dark'
-    ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
-    : 'bg-gradient-to-br from-gray-50 to-gray-100';
-
-  const textColor = theme === 'dark'
-    ? 'text-white'
-    : 'text-gray-800';
-
-  const cardBg = theme === 'dark'
-    ? 'bg-gray-800/90 backdrop-blur-md'
-    : 'bg-white';
-
-  const inputBg = theme === 'dark'
-    ? 'bg-gray-700/70 border-gray-600 text-white'
-    : 'bg-white border-gray-300 text-gray-800';
-
-  const buttonBg = theme === 'dark'
-    ? 'bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500'
-    : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400';
-
-  const headerBg = theme === 'dark'
-    ? 'bg-gradient-to-r from-blue-900 to-blue-800'
-    : 'bg-gradient-to-r from-blue-700 to-blue-600';
-
-  const emptyStateBg = theme === 'dark'
-    ? 'bg-gray-800/80 text-gray-300'
-    : 'bg-white text-gray-700';
-
-  const borderColor = theme === 'dark'
-    ? 'border-gray-700'
-    : 'border-gray-300';
+  // Styles (Unchanged)
+  const bgColor = theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 to-gray-100';
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-800';
+  const cardBg = theme === 'dark' ? 'bg-gray-800/90 backdrop-blur-md' : 'bg-white';
+  const inputBg = theme === 'dark' ? 'bg-gray-700/70 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800';
+  const buttonBg = theme === 'dark' ? 'bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400';
+  const headerBg = theme === 'dark' ? 'bg-gradient-to-r from-blue-900 to-blue-800' : 'bg-gradient-to-r from-blue-700 to-blue-600';
+  const emptyStateBg = theme === 'dark' ? 'bg-gray-800/80 text-gray-300' : 'bg-white text-gray-700';
+  const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-300';
 
   return (
     <div className={`min-h-screen p-6 ${bgColor} ${textColor} transition-colors duration-300`}>
@@ -131,9 +161,7 @@ const VideoManager = () => {
         {[...Array(20)].map((_, i) => (
           <div 
             key={i}
-            className={`absolute rounded-full ${
-              theme === 'dark' ? 'bg-blue-400/10' : 'bg-blue-500/10'
-            }`}
+            className={`absolute rounded-full ${theme === 'dark' ? 'bg-blue-400/10' : 'bg-blue-500/10'}`}
             style={{
               width: `${Math.random() * 10 + 5}px`,
               height: `${Math.random() * 10 + 5}px`,
@@ -255,10 +283,23 @@ const VideoManager = () => {
               </div>
             </div>
 
+            {/* --- NEW: Progress Bar Display --- */}
+            {loading && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-4 overflow-hidden">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+                <p className={`text-center text-sm mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {uploadProgress}% Uploaded
+                </p>
+              </div>
+            )}
+
             <div className="flex justify-end">
               <button
                 type="submit"
-                className={`text-white px-8 py-4 rounded-xl font-medium flex items-center transition-all duration-300 shadow-lg hover:shadow-xl ${buttonBg}`}
+                className={`text-white px-8 py-4 rounded-xl font-medium flex items-center transition-all duration-300 shadow-lg hover:shadow-xl ${buttonBg} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 disabled={loading}
               >
                 {loading ? (

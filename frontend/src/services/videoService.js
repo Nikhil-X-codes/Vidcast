@@ -52,3 +52,15 @@ export const fetchVideoById = (videoId) =>
   axios.get(`${API_BASE}/videos/single/${videoId}`, {
     withCredentials: true,
   });
+
+  export const getUploadSignature = (folderName) =>
+  axios.post(`${API_BASE}/videos/sign-upload`, 
+    { folderName }, 
+    { withCredentials: true }
+  );
+
+  export const saveVideoData = (videoData) =>
+  axios.post(`${API_BASE}/videos/save-video-data`, 
+    videoData, 
+    { withCredentials: true }
+  );

@@ -5,6 +5,28 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/apiresponse.js"; 
 import { User } from "../models/User.model.js";
 
+import { v2 as cloudinary } from 'cloudinary';
+
+
+const generateCloudinarySignature = asynchandler(async (req, res) => {
+    const { folderName } = req.body; 
+
+    const timestamp = Math.round((new Date).getTime() / 1000);
+
+    const params = {
+        timestamp: timestamp,
+        folder: folderName || 'vidcast_videos', 
+    };
+
+    const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
+
+    res.status(200).json(new ApiResponse(200, "Signature generated successfully", {
+        signature,
+        timestamp,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY
+    }));
+});
 
 const videouploading = asynchandler(async (req, res) => {
   const { title, description } = req.body;
@@ -180,6 +202,24 @@ const viewonvideo = asynchandler(async (req, res) => {
     .json(new ApiResponse(200, "Video viewed and added to watch history", video));
 });
 
+const saveVideoData = asynchandler(async (req, res) => {
+  const { title, description, videoUrl, thumbnailUrl } = req.body;
+
+  if (!videoUrl) {
+     throw new ApiError(400, "Video URL is missing");
+  }
+
+  const video = await Video.create({
+    title,
+    description,
+    video: videoUrl,       // Save the URL directly
+    thumbnail: thumbnailUrl || "", // You can do the same direct upload for thumbnails if you want
+    owner: req.user._id
+  });
+
+  res.status(200).json(new ApiResponse(200, "Video saved successfully", video));
+});
 
 
-export {videouploading,videodeleting,videoupdating,getAllVideos,getSingleVideo,viewonvideo,getVideosOnSearch};
+
+export {generateCloudinarySignature,videouploading,videodeleting,videoupdating,getAllVideos,getSingleVideo,viewonvideo,getVideosOnSearch,saveVideoData};
