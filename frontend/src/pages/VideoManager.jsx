@@ -41,13 +41,13 @@ const VideoManager = () => {
     loadVideos();
   }, []);
 
-  // --- NEW HELPER: Uploads a file directly to Cloudinary ---
-  const uploadToCloudinary = async (file, folderName) => {
-    // 1. Get the signature from YOUR backend
+const uploadToCloudinary = async (file, folderName) => {
+    // 1. Ask Backend for permission (Signature)
+    // Keep using your service function here (this goes to YOUR backend, so it needs credentials)
     const { data: signData } = await getUploadSignature(folderName);
     const { signature, timestamp, cloudName, apiKey } = signData.data;
 
-    // 2. Prepare Form Data for Cloudinary
+    // 2. Prepare the upload form
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", apiKey);
@@ -55,18 +55,26 @@ const VideoManager = () => {
     formData.append("signature", signature);
     formData.append("folder", folderName);
 
-    // 3. Construct the Cloudinary URL
+    // 3. Determine if it's a video or image
     const resourceType = file.type.startsWith('video') ? 'video' : 'image';
     const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
-    // 4. Upload using Axios to track progress
+    // 4. Send file to Cloudinary (Bypasses Vercel)
     const res = await axios.post(cloudinaryUrl, formData, {
+      // --- CRITICAL FIX START ---
+      withCredentials: false, // <--- THIS TELLS AXIOS NOT TO SEND COOKIES TO CLOUDINARY
+      // --- CRITICAL FIX END ---
+      
+      headers: {
+        'Content-Type': 'multipart/form-data', // Explicitly set content type just in case
+      },
       onUploadProgress: (progressEvent) => {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         setUploadProgress(percent);
       }
     });
 
+    // 5. Return the secure URL
     return res.data.secure_url;
   };
 
