@@ -3,9 +3,10 @@ import {generateCloudinarySignature,videouploading,videodeleting,videoupdating,g
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-videoRouter.post("/sign-upload", verifyJWT, generateCloudinarySignature);
 
 const videoRouter = Router();
+
+videoRouter.post("/sign-upload", verifyJWT, generateCloudinarySignature);
 
 videoRouter.post(
   "/upload",
