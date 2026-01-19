@@ -5,12 +5,16 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 
+// CORS configuration for Vercel deployment
 app.use(cors({
-     origin: process.env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-     allowedHeaders: ['Content-Type', 'Authorization'],
-}))
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+}));
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json({
     limit: '1mb'
