@@ -94,16 +94,13 @@ const videoupdating = asynchandler(async (req, res) => {
 
 const getAllVideos = asynchandler(async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-
     const loggedInUserId = req.user?._id;
 
     if (!loggedInUserId) {
-        throw new ApiError(401, "Unauthorized: Login required to view your videos");
+        throw new ApiError(401, "Unauthorized");
     }
 
-    const filter = {
-        owner: loggedInUserId
-    };
+    const filter = { owner: loggedInUserId };
 
     const videos = await Video.find(filter)
         .populate("owner", "_id username avatar")
@@ -203,23 +200,29 @@ const viewonvideo = asynchandler(async (req, res) => {
 });
 
 const saveVideoData = asynchandler(async (req, res) => {
-  const { title, description, videoUrl, thumbnailUrl } = req.body;
+    const { title, description, videoUrl, thumbnailUrl } = req.body;
 
-  if (!videoUrl) {
-     throw new ApiError(400, "Video URL is missing");
-  }
+    if (!videoUrl) {
+       throw new ApiError(400, "Video URL is missing");
+    }
+    const video = await Video.create({
+        title,
+        description,
+        video: videoUrl,
+        thumbnail: thumbnailUrl || "",
+        owner: req.user._id
+    });
 
-  const video = await Video.create({
-    title,
-    description,
-    video: videoUrl,       // Save the URL directly
-    thumbnail: thumbnailUrl || "", // You can do the same direct upload for thumbnails if you want
-    owner: req.user._id
-  });
+    await User.findByIdAndUpdate(
+        req.user._id,
+        { 
+            $push: { videos: video._id } 
+        },
+        { new: true }
+    );
 
-  res.status(200).json(new ApiResponse(200, "Video saved successfully", video));
+    res.status(200).json(new ApiResponse(200, "Video saved successfully", video));
 });
-
 
 
 export {generateCloudinarySignature,videouploading,videodeleting,videoupdating,getAllVideos,getSingleVideo,viewonvideo,getVideosOnSearch,saveVideoData};

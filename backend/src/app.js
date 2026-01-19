@@ -46,6 +46,13 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
+app.get('/api/v1', (req, res) => {
+    res.status(200).json({
+        message: "Welcome to Vidcast",
+        success: true
+    });
+});
+
 export default app;
 
 
