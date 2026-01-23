@@ -58,10 +58,9 @@ const getComment = asynchandler(async (req, res) => {
     const comments = await Comments.find({ video: videoId })
         .populate("CommentBy", "username avatar")
         .sort({ createdAt: -1 });
-    if (!comments || comments.length === 0) {
-        throw new ApiError(404, "No comments found for this video");    
-    }
-    res.status(200).json(new ApiResponse(200,"Comments fetched successfully",comments));
+    
+    // Return empty array instead of error when no comments exist
+    res.status(200).json(new ApiResponse(200,"Comments fetched successfully", comments || []));
 })
 
 export {addComment, deleteComment,updatingComment,getComment}

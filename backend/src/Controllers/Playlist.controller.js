@@ -28,7 +28,7 @@ const createPlaylist = asynchandler(async (req, res) => {
 
 const deletePlaylist = asynchandler(async (req, res) => {
     const { playlistId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const playlist = await Playlists.findOneAndDelete({ _id: playlistId, owner: userId });
 
@@ -43,7 +43,7 @@ const updatePlaylist = asynchandler(async (req, res) => {
 
     const { playlistId } = req.params;
     const { name, description } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!name && !description) {
         throw new ApiError(400, "Name and description are required");
@@ -65,7 +65,7 @@ const updatePlaylist = asynchandler(async (req, res) => {
 
 const addVideoToPlaylist = asynchandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const playlist = await Playlists.findOne({ _id: playlistId, owner: userId });
 
@@ -85,7 +85,7 @@ const addVideoToPlaylist = asynchandler(async (req, res) => {
 
 const removeVideoFromPlaylist = asynchandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if( !mongoose.Types.ObjectId.isValid(playlistId) || !mongoose.Types.ObjectId.isValid(videoId)) {
         throw new ApiError(400, "Invalid playlist or video ID");
